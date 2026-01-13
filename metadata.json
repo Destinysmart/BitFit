@@ -1,0 +1,7 @@
+{
+  "name": "BitFitness",
+  "description": "Stack reps like you stack sats. A Bitcoin-themed fitness tracker focusing on 'Proof-of-Work' and consistency.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
