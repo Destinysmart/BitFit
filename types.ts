@@ -1,5 +1,8 @@
 
 export type VerificationStatus = 'pending' | 'verified' | 'flagged' | 'rejected';
+export type ChallengeCategory = 'Strength' | 'Endurance' | 'Genesis' | 'Sprint' | 'Community';
+export type ChallengeStatus = 'draft' | 'active' | 'finalizing' | 'settled';
+export type RecurrenceProtocol = 'once' | 'daily' | 'weekly' | 'monthly';
 
 export interface Workout {
   id: string;
@@ -8,14 +11,17 @@ export interface Workout {
   sets: number;
   duration?: number;
   timestamp: number;
-  photo?: string; // base64
-  powVerified: boolean; // User's self-attestation
-  verificationStatus: VerificationStatus; // AI or Admin status
+  photo?: string;
+  xProofUrl?: string;
+  powVerified: boolean;
+  verificationStatus: VerificationStatus;
   aiReason?: string;
-  aiConfidence?: number; // 0-100 score from Oracle
-  validatorReason?: string; // Manual note from validator node
+  aiConfidence?: number;
+  validatorReason?: string;
   isImported?: boolean;
   participantName?: string;
+  challengeId?: string; 
+  challengeName?: string;
 }
 
 export interface PeerWorkout extends Omit<Workout, 'photo'> {
@@ -31,16 +37,25 @@ export interface Challenge {
   currentDays: number;
   joined: boolean;
   startDate?: number;
+  creatorNode?: string;
+  category: ChallengeCategory;
+  targetTotalReps?: number;
+  isPublic?: boolean;
+  // New Settlement Fields
+  rewardSats?: number;
+  recurrence: RecurrenceProtocol;
+  status: ChallengeStatus;
+  payoutProofUrl?: string;
 }
 
 export interface UserStats {
   streak: number;
-  lastWorkoutDate?: string; // YYYY-MM-DD
+  lastWorkoutDate?: string;
   totalReps: number;
   totalSets: number;
 }
 
-export type Page = 'home' | 'network' | 'log' | 'challenges' | 'progress' | 'settings' | 'validator';
+export type Page = 'home' | 'network' | 'log' | 'challenges' | 'progress' | 'settings' | 'validator' | 'tutorial';
 
 export interface AppState {
   workouts: Workout[];
@@ -49,4 +64,5 @@ export interface AppState {
   theme: 'light' | 'dark';
   aiOracleEnabled: boolean;
   userName: string;
+  lightningAddress: string;
 }

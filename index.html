@@ -3,11 +3,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#F7931A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
     <title>BitFitness - Stack Reps</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -16,7 +20,7 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+              sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
               mono: ['JetBrains Mono', 'monospace'],
             },
             colors: {
@@ -25,33 +29,57 @@
                 dark: '#E88300',
                 light: '#FFAB42',
                 soft: 'rgba(247, 147, 26, 0.1)',
+                glow: 'rgba(247, 147, 26, 0.4)',
               },
               zinc: {
-                950: '#09090b',
-                900: '#121217',
-                800: '#1c1c24',
-                700: '#272731',
+                50: '#f9f9fb',
+                100: '#f3f3f7',
+                200: '#e5e5ed',
+                300: '#d1d1de',
+                400: '#a3a3b8',
+                500: '#73738c',
+                600: '#52526b',
+                700: '#404052',
+                800: '#272731',
+                900: '#1c1c24',
+                950: '#0c0c10',
               }
             },
             borderRadius: {
-              '2xl': '18px',
-              '3xl': '24px',
-              '4xl': '32px',
-              '5xl': '40px',
+              'xl': '16px',
+              '2xl': '24px',
+              '3xl': '32px',
+              '4xl': '40px',
+              '5xl': '48px',
+            },
+            boxShadow: {
+              'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+              'hard': '0 20px 40px -12px rgba(0, 0, 0, 0.15)',
+              'bitcoin': '0 8px 30px -4px rgba(247, 147, 26, 0.25)',
             },
             animation: {
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'float': 'float 4s ease-in-out infinite',
-              'ripple': 'ripple 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+              'float': 'float 5s ease-in-out infinite',
+              'ripple': 'ripple 1.8s cubic-bezier(0, 0, 0.2, 1) infinite',
+              'shimmer': 'shimmer 2.5s linear infinite',
+              'enter': 'enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             },
             keyframes: {
               float: {
                 '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-8px)' },
+                '50%': { transform: 'translateY(-10px)' },
               },
               ripple: {
-                '0%': { transform: 'scale(0.8)', opacity: '1' },
-                '100%': { transform: 'scale(2.2)', opacity: '0' },
+                '0%': { transform: 'scale(0.8)', opacity: '0.8' },
+                '100%': { transform: 'scale(2.5)', opacity: '0' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              },
+              enter: {
+                'from': { opacity: '0', transform: 'translateY(20px) scale(0.98)' },
+                'to': { opacity: '1', transform: 'translateY(0) scale(1)' },
               }
             }
           }
@@ -59,28 +87,47 @@
       }
     </script>
     <style>
+      :root {
+        --bitcoin-hex: #F7931A;
+      }
+      
       body {
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior-y: contain;
         overflow-x: hidden;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        user-select: none;
+      }
+
+      /* Native scroll feel for lists */
+      .scroll-container {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .scroll-container::-webkit-scrollbar {
+        display: none;
       }
       
       .glass {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
       
       .dark .glass {
-        background: rgba(18, 18, 23, 0.75);
+        background: rgba(12, 12, 16, 0.7);
       }
       
       .bitcoin-gradient {
         background: linear-gradient(135deg, #F7931A 0%, #FFAB42 100%);
       }
       
-      .bitcoin-glow {
-        box-shadow: 0 10px 30px -10px rgba(247, 147, 26, 0.5);
+      .bitcoin-text-gradient {
+        background: linear-gradient(135deg, #F7931A 0%, #FFAB42 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
       .noise {
@@ -89,40 +136,49 @@
         left: 0;
         width: 100%;
         height: 100%;
-        opacity: 0.035;
+        opacity: 0.02;
         z-index: 9999;
         pointer-events: none;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
       }
 
-      ::-webkit-scrollbar {
-        width: 0px;
+      .page-transition {
+        animation: enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      input, select, button {
+        outline: none !important;
+      }
+
+      /* Custom button press animation */
+      .btn-press:active {
+        transform: scale(0.96);
+        opacity: 0.9;
+      }
+
+      /* Smooth range input */
+      input[type="range"] {
+        -webkit-appearance: none;
         background: transparent;
       }
-
-      .view-container {
-        animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-
-      @keyframes pageEnter {
-        from { 
-          opacity: 0; 
-          transform: translateY(16px) scale(0.98); 
-        }
-        to { 
-          opacity: 1; 
-          transform: translateY(0) scale(1); 
-        }
-      }
-      
-      input[type="number"]::-webkit-inner-spin-button,
-      input[type="number"]::-webkit-outer-spin-button {
+      input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
-        margin: 0;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: var(--bitcoin-hex);
+        box-shadow: 0 0 10px rgba(247, 147, 26, 0.4);
+        margin-top: -8px;
+        cursor: pointer;
       }
-
-      .tab-active-glow {
-        filter: drop-shadow(0 0 8px rgba(247, 147, 26, 0.4));
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8px;
+        background: #e5e5ed;
+        border-radius: 4px;
+      }
+      .dark input[type="range"]::-webkit-slider-runnable-track {
+        background: #272731;
       }
     </style>
 <script type="importmap">
@@ -140,5 +196,16 @@
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors duration-500 font-sans selection:bg-bitcoin selection:text-white antialiased">
     <div class="noise"></div>
     <div id="root"></div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('SW Registered', reg.scope);
+                }).catch(err => {
+                    console.log('SW Registration failed', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

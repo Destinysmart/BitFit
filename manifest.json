@@ -1,0 +1,23 @@
+
+{
+  "name": "BitFitness",
+  "short_name": "BitFitness",
+  "description": "Stack reps like you stack sats. Proof-of-Work Fitness Tracker.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#F7931A",
+  "icons": [
+    {
+      "src": "https://cdn.pixabay.com/photo/2017/01/25/12/31/bitcoin-2007769_1280.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.pixabay.com/photo/2017/01/25/12/31/bitcoin-2007769_1280.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

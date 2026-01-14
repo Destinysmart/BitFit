@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppState } from '../types';
 import { BITFITNESS_LOGO } from '../constants';
 
@@ -10,181 +10,174 @@ interface SettingsProps {
   onClearData: () => void;
   onExport: () => void;
   onOpenValidator: () => void;
+  onUpdateProfile: (name: string, lnAddr: string) => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ state, onToggleTheme, onToggleOracle, onClearData, onExport, onOpenValidator }) => {
-  const { theme, aiOracleEnabled, userName } = state;
+const Settings: React.FC<SettingsProps> = ({ state, onToggleTheme, onToggleOracle, onClearData, onExport, onOpenValidator, onUpdateProfile }) => {
+  const { theme, aiOracleEnabled, userName, lightningAddress } = state;
+  const [editName, setEditName] = useState(userName);
+  const [editLnAddr, setEditLnAddr] = useState(lightningAddress);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isLinkingWallet, setIsLinkingWallet] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const handleConnectWallet = () => {
-    alert("Blink Wallet Integration: Coming soon to mainnet. Prepare your lightning address for PoW payouts.");
+  useEffect(() => {
+    setHasUnsavedChanges(editName !== userName || editLnAddr !== lightningAddress);
+  }, [editName, editLnAddr, userName, lightningAddress]);
+
+  const haptic = (p: number | number[]) => { if ('vibrate' in navigator) navigator.vibrate(p); };
+
+  const handleSaveProfile = () => {
+    setIsSyncing(true);
+    haptic(50);
+    setTimeout(() => {
+      onUpdateProfile(editName, editLnAddr);
+      setIsSyncing(false);
+      haptic([50, 30, 50]);
+    }, 800);
   };
 
-  const handleExportData = () => {
-    try {
-      const exportData = { ...state, exportDate: new Date().toISOString(), version: "3.0" };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `bitfitness_node_backup.json`;
-      link.click();
-    } catch (e) { console.error(e); }
+  const handleConnectWallet = () => {
+    if (!editLnAddr || !editLnAddr.includes('@')) {
+      alert("Format Error: Lightning Address required.");
+      haptic([100, 50, 100]);
+      return;
+    }
+    setIsLinkingWallet(true);
+    haptic([20, 20, 20, 20]);
+    setTimeout(() => {
+      onUpdateProfile(editName, editLnAddr);
+      setIsLinkingWallet(false);
+      haptic(150);
+    }, 1200);
   };
 
   return (
-    <div className="space-y-8 pb-32 animate-in fade-in duration-500">
+    <div className="space-y-10 pb-32 page-transition">
       <header className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none">Settings</h2>
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Local Node Protocol</p>
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none">Node Config</h2>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Protocol Identity Layer</p>
         </div>
-        <div className="w-14 h-14 bg-zinc-900 rounded-2xl flex items-center justify-center text-bitcoin shadow-xl">
-           <i className="fa-solid fa-code text-xl"></i>
+        <div className="w-12 h-12 bg-zinc-950 dark:bg-zinc-900 rounded-2xl flex items-center justify-center text-bitcoin shadow-hard">
+           <i className="fa-solid fa-id-card text-lg"></i>
         </div>
       </header>
 
-      {/* User Profile */}
-      <section className="bg-white dark:bg-zinc-900 p-8 rounded-4xl border border-zinc-100 dark:border-zinc-800 shadow-sm flex items-center gap-6">
-        <div className="w-20 h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-100 dark:border-zinc-700">
-           <img src={BITFITNESS_LOGO} className="w-12 h-12 rounded-2xl" />
+      {/* Profile Card */}
+      <section className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-soft space-y-8 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 pointer-events-none group-hover:rotate-0 transition-transform duration-1000">
+           <i className="fa-solid fa-fingerprint text-8xl"></i>
         </div>
-        <div className="space-y-1">
-           <p className="text-[10px] font-black text-bitcoin uppercase tracking-widest">Active Node Identifier</p>
-           <h3 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 italic">{userName}</h3>
-           <div className="flex items-center gap-2 text-green-500 text-[10px] font-bold uppercase">
-             <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-             Mainnet Synced
-           </div>
-        </div>
-      </section>
-
-      {/* Lightning Integration */}
-      <section className="space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 px-1">Money Protocol</h3>
-        <div className="relative group">
-          <button 
-            onClick={handleConnectWallet}
-            className="w-full bg-zinc-950 text-white p-8 rounded-4xl flex items-center justify-between shadow-2xl transition-all hover:scale-[1.02] active:scale-95 group/btn"
-          >
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-white/10 rounded-3xl flex items-center justify-center text-bitcoin group-hover/btn:scale-110 transition-transform">
-                <i className="fa-solid fa-bolt-lightning text-2xl"></i>
-              </div>
-              <div className="text-left">
-                <span className="block text-lg font-black italic uppercase leading-none mb-1">Blink Wallet</span>
-                <span className="block text-[10px] opacity-50 uppercase font-black tracking-widest">Connect for PoW Payouts</span>
-              </div>
-            </div>
-            <i className="fa-solid fa-plus text-zinc-700"></i>
-          </button>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
-            <div className="bg-zinc-900 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-xl border border-white/10 whitespace-nowrap">
-              Link Lightning wallet for rewards
-            </div>
+        
+        <div className="flex items-center gap-6 relative z-10">
+          <div className="w-16 h-16 rounded-3xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-100 dark:border-zinc-700 shadow-inner overflow-hidden">
+             <img src={BITFITNESS_LOGO} className="w-10 h-10" alt="Logo" />
           </div>
+          <div className="space-y-1">
+             <p className="text-[10px] font-black text-bitcoin uppercase tracking-widest">Global Relay ID</p>
+             <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-100 italic truncate max-w-[180px]">{userName}</h3>
+          </div>
+        </div>
+
+        <div className="space-y-6 relative z-10 pt-2">
+          <div className="space-y-2">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Identifier</label>
+            <input 
+              type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+              className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-2 border-zinc-100 dark:border-zinc-800 focus:border-bitcoin outline-none font-bold text-sm transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Lightning Address</label>
+            <input 
+              type="email" value={editLnAddr} onChange={(e) => setEditLnAddr(e.target.value)}
+              placeholder="user@blink.sv"
+              className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-2 border-zinc-100 dark:border-zinc-800 focus:border-bitcoin outline-none font-mono text-[11px] transition-all"
+            />
+          </div>
+
+          <button 
+            onClick={handleSaveProfile}
+            disabled={!hasUnsavedChanges || isSyncing}
+            className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-bitcoin transition-all btn-press flex items-center justify-center gap-2 ${
+              !hasUnsavedChanges || isSyncing ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border-zinc-200 dark:border-zinc-700' : 'bitcoin-gradient text-white'
+            }`}
+          >
+            {isSyncing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-sync"></i>}
+            {isSyncing ? 'Syncing...' : 'Propagate Update'}
+          </button>
         </div>
       </section>
 
       {/* Toggles */}
       <section className="space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 px-1">System</h3>
-        <div className="bg-white dark:bg-zinc-900 rounded-4xl border border-zinc-100 dark:border-zinc-800 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800 shadow-sm">
-          <div className="relative group">
-            <button onClick={onToggleTheme} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-bitcoin">
-                  <i className={`fa-solid ${theme === 'dark' ? 'fa-moon' : 'fa-sun'}`}></i>
-                </div>
-                <span className="font-black uppercase text-xs tracking-widest text-zinc-900 dark:text-white">Dark Protocol</span>
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Node Operations</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800 shadow-soft">
+          <button onClick={() => {onToggleTheme(); haptic(20);}} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-bitcoin">
+                <i className={`fa-solid ${theme === 'dark' ? 'fa-moon' : 'fa-sun'}`}></i>
               </div>
-              <div className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${theme === 'dark' ? 'bg-bitcoin' : 'bg-zinc-200'}`}>
-                <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'} shadow-md`} />
-              </div>
-            </button>
-            <div className="absolute top-1/2 -translate-y-1/2 right-full mr-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <div className="bg-zinc-900 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-xl border border-white/10 whitespace-nowrap">
-                Switch interface theme
+              <div>
+                <span className="block font-bold text-[13px]">Dark Mode</span>
+                <span className="block text-[10px] text-zinc-400 font-medium">Battery optimization</span>
               </div>
             </div>
-          </div>
-
-          <div className="relative group">
-            <button onClick={onToggleOracle} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-bitcoin">
-                  <i className="fa-solid fa-microchip"></i>
-                </div>
-                <div className="text-left">
-                  <span className="block font-black uppercase text-xs tracking-widest text-zinc-900 dark:text-white">AI PoW Oracle</span>
-                  <span className="block text-[9px] text-zinc-500 font-bold uppercase tracking-tighter">Automatic Visual Verification</span>
-                </div>
-              </div>
-              <div className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${aiOracleEnabled ? 'bg-bitcoin' : 'bg-zinc-200'}`}>
-                <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${aiOracleEnabled ? 'translate-x-6' : 'translate-x-0'} shadow-md`} />
-              </div>
-            </button>
-            <div className="absolute top-1/2 -translate-y-1/2 right-full mr-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <div className="bg-zinc-900 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-xl border border-white/10 whitespace-nowrap">
-                Enable AI visual verification
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Validator Dashboard Link */}
-      <section className="space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 px-1">Consensus</h3>
-        <div className="relative group">
-          <button 
-            onClick={onOpenValidator}
-            className="w-full bg-white dark:bg-zinc-900 p-6 rounded-4xl flex items-center justify-between shadow-sm border border-zinc-100 dark:border-zinc-800 hover:border-bitcoin transition-all group/btn"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-bitcoin/10 rounded-2xl flex items-center justify-center text-bitcoin">
-                <i className="fa-solid fa-shield-check"></i>
-              </div>
-              <div className="text-left">
-                <span className="block font-black uppercase text-xs tracking-widest text-zinc-900 dark:text-white">Validator Station</span>
-                <span className="block text-[9px] text-zinc-500 font-bold uppercase tracking-tighter">Review Participant Mempool</span>
-              </div>
-            </div>
-            <i className="fa-solid fa-chevron-right text-zinc-300 group-hover/btn:translate-x-1 transition-transform"></i>
-          </button>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
-            <div className="bg-zinc-900 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-xl border border-white/10 whitespace-nowrap">
-              Review pending network blocks
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Ledger Actions */}
-      <section className="space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 px-1">Ledger</h3>
-        <div className="bg-white dark:bg-zinc-900 rounded-4xl border border-zinc-100 dark:border-zinc-800 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800 shadow-sm">
-          <button onClick={handleExportData} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-600 dark:text-zinc-400">
-            <div className="flex items-center gap-4">
-              <i className="fa-solid fa-file-export w-5"></i>
-              <span className="font-black uppercase text-xs tracking-widest">Export Node State</span>
+            <div className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 ${theme === 'dark' ? 'bg-bitcoin' : 'bg-zinc-200'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </button>
-          <button onClick={onClearData} className="w-full p-6 flex items-center justify-between hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-red-500">
-            <div className="flex items-center gap-4">
-              <i className="fa-solid fa-trash-can w-5"></i>
-              <span className="font-black uppercase text-xs tracking-widest">Hard Reset Chain</span>
+          
+          <button onClick={() => {onToggleOracle(); haptic(20);}} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-bitcoin">
+                <i className="fa-solid fa-microchip"></i>
+              </div>
+              <div>
+                <span className="block font-bold text-[13px]">AI Validator</span>
+                <span className="block text-[10px] text-zinc-400 font-medium">Auto-verification</span>
+              </div>
             </div>
+            <div className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 ${aiOracleEnabled ? 'bg-bitcoin' : 'bg-zinc-200'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${aiOracleEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+            </div>
+          </button>
+
+          <button onClick={() => {onOpenValidator(); haptic(20);}} className="w-full p-6 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-bitcoin">
+                <i className="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <span className="block font-bold text-[13px] text-bitcoin">Validator Station</span>
+                <span className="block text-[10px] text-zinc-400 font-medium">Audit mempool & settle</span>
+              </div>
+            </div>
+            <i className="fa-solid fa-chevron-right text-zinc-300 text-xs"></i>
           </button>
         </div>
       </section>
 
-      <footer className="text-center pt-8 pb-12 space-y-4 opacity-50">
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Stack Reps. Stack Sats.</p>
-        <div className="flex justify-center gap-6 text-xl">
-           <i className="fa-brands fa-github text-zinc-400 hover:text-bitcoin transition-colors"></i>
-           <i className="fa-brands fa-x-twitter text-zinc-400 hover:text-bitcoin transition-colors"></i>
-        </div>
-      </footer>
+      {/* Critical Actions */}
+      <section className="space-y-4 pt-4">
+        <button 
+          onClick={() => {if(confirm("Confirm hard reset?")) { onClearData(); haptic([200, 100, 200]); }}}
+          className="w-full p-6 bg-red-50 dark:bg-red-500/10 rounded-[2rem] border border-red-100 dark:border-red-500/20 flex items-center justify-between group transition-all active:scale-95"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+              <i className="fa-solid fa-trash-can"></i>
+            </div>
+            <div className="text-left">
+               <span className="block font-bold text-[13px] text-red-600 dark:text-red-400">Hard Reset</span>
+               <span className="block text-[10px] text-red-400/60 font-medium">Delete all chain data</span>
+            </div>
+          </div>
+          <i className="fa-solid fa-triangle-exclamation text-red-300 group-hover:text-red-500 transition-colors"></i>
+        </button>
+      </section>
     </div>
   );
 };
